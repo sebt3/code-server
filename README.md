@@ -2,5 +2,5 @@
 
 # code-server Docker image
 
-This is the packaging of [code-server](https://github.com/coder/code-server) as a [docker image](https://hub.docker.com/r/sebt3/code-server) in a multi-arch (amd64, arm, arm64) format.
+This is the packaging of [code-server](https://github.com/coder/code-server) as a [docker image](https://hub.docker.com/r/sebt3/code-server) in a multi-arch (amd64, arm64) format.
 It include tons of usefull tools for DevOps. It have mainly build for the [kydah project](http://kydah.fr/)
