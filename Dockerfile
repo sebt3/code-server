@@ -18,8 +18,7 @@ ARG VIRTCTL_VERSION=v0.58.0
 ARG TF_VERSION=1.3.6
 ARG YQ_VERSION=v4.30.5
 ARG TASK_VERSION=v3.18.0
-ARG KN_VERSION=v1.8.1
-ARG FUNC_VERSION=v1.8.1
+ARG FISSION_VERSION=v1.18.0
 ARG TILT_VERSION=0.30.13
 USER root
 COPY profile/*.sh /etc/profile.d/
@@ -41,8 +40,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCHITECTURE}.tar.gz" |tar --wildcards -C /usr/local/bin/ --strip-components=1 -xzf - */helm \
  && curl -sL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-${ARCH}" -o "/usr/local/bin/hadolint" \
  && curl -sL "https://github.com/openfaas/faas-cli/releases/download/${FAASCLI_VERSION}/faas-cli${SUFFIX}" -o "/usr/local/bin/faas-cli" \
- && curl -sL "https://github.com/knative/client/releases/download/knative-${KN_VERSION}/kn-linux-${ARCHITECTURE}" -o "/usr/local/bin/kn" \
- && curl -sL "https://github.com/knative/func/releases/download/knative-${FUNC_VERSION}/func_linux_${ARCHITECTURE}" -o "/usr/local/bin/kn-func" \
+ && curl -sL "https://github.com/fission/fission/releases/download/${FISSION_VERSION}/fission-${FISSION_VERSION}-linux-${ARCHITECTURE}" -o "/usr/local/bin/fission" \
  && curl -sL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCHITECTURE}" -o "/usr/local/bin/yq" \
  && curl -sL "https://github.com/go-task/task/releases/download/${TASK_VERSION}/task_linux_${ARCHITECTURE}.tar.gz"| tar -C /usr/local/bin/ -xzf - task \
  && curl -sL "https://github.com/tilt-dev/tilt/releases/download/v${TILT_VERSION}/tilt.${TILT_VERSION}.linux.${ARCH}.tar.gz"| tar -C /usr/local/bin/ -xzf - tilt \
