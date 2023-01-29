@@ -3,9 +3,9 @@ FROM docker.io/golang:1.19 as gobuilder
 RUN GO111MODULE=on go install golang.stackrox.io/kube-linter/cmd/kube-linter@latest
 FROM docker.io/node:16-bullseye-slim as target
 ARG CS_VERSION=4.9.1
-ARG DEB_PACKAGES="vim git jq locales curl traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev"
+ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
-ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint"
+ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint"
 ARG NODE_PACKAGES="serverless code-server@${CS_VERSION}"
 ARG KUBECTL_VERSION=v1.25.2
 ARG BK_VERSION=v0.1.6
@@ -20,10 +20,10 @@ ARG YQ_VERSION=v4.30.5
 ARG TASK_VERSION=v3.18.0
 ARG FISSION_VERSION=v1.18.0
 ARG TILT_VERSION=0.30.13
+ARG SHELLCHECK_VERSION=v0.9.0
 USER root
 COPY profile/*.sh /etc/profile.d/
 COPY entrypoint.sh /usr/local/bin/
-COPY --from=gobuilder /go/bin/kube-linter /usr/local/bin
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3003,DL3008,DL3013,DL3015,DL3016,SC2035
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
@@ -31,7 +31,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get -y install ${DEB_PACKAGES} \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
- && SUFFIX="";case "$(uname -m)" in arm) SUFFIX="-armhf";ARCHITECTURE=arm;ARCH=arm;; armv8*|aarch64*) SUFFIX="-arm64";ARCHITECTURE=arm64;ARCH=arm64;; x86_64|i686|*) ARCHITECTURE=amd64;ARCH=x86_64;; esac \
+ && SUFFIX="";case "$(uname -m)" in arm) SUFFIX="-armhf";ARCHITECTURE=arm;ARCH=arm;SA=armv6hf;; armv8*|aarch64*) SUFFIX="-arm64";ARCHITECTURE=arm64;ARCH=arm64;SA=aarch64;; x86_64|i686|*) ARCHITECTURE=amd64;ARCH=x86_64;SA="$ARCH";; esac \
  && curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - \
  && curl -sL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl" -o /usr/local/bin/kubectl \
  && echo "$(curl -sL "https://dl.k8s.io/${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl.sha256") /usr/local/bin/kubectl" | sha256sum --check \
@@ -39,6 +39,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://github.com/genuinetools/img/releases/download/${IMG_VERSION}/img-linux-${ARCHITECTURE}" -o "/usr/local/bin/img" \
  && curl -sL "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCHITECTURE}.tar.gz" |tar --wildcards -C /usr/local/bin/ --strip-components=1 -xzf - */helm \
  && curl -sL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-${ARCH}" -o "/usr/local/bin/hadolint" \
+ && curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.${SA}.tar.xz" | tar --wildcards -C /usr/local/bin/ --strip-components=1 -xJf - */shellcheck \
  && curl -sL "https://github.com/openfaas/faas-cli/releases/download/${FAASCLI_VERSION}/faas-cli${SUFFIX}" -o "/usr/local/bin/faas-cli" \
  && curl -sL "https://github.com/fission/fission/releases/download/${FISSION_VERSION}/fission-${FISSION_VERSION}-linux-${ARCHITECTURE}" -o "/usr/local/bin/fission" \
  && curl -sL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCHITECTURE}" -o "/usr/local/bin/yq" \
@@ -76,6 +77,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
  && echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen \
  && locale-gen
+COPY --from=gobuilder /go/bin/kube-linter /usr/local/bin
 USER coder:coder
 WORKDIR /home/coder
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
