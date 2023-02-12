@@ -19,6 +19,7 @@ ARG TF_VERSION=1.3.6
 ARG YQ_VERSION=v4.30.5
 ARG TASK_VERSION=v3.18.0
 ARG FISSION_VERSION=v1.18.0
+ARG ARGO_VERSION=v3.4.5
 ARG TILT_VERSION=0.30.13
 ARG SHELLCHECK_VERSION=v0.9.0
 USER root
@@ -42,6 +43,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.${SA}.tar.xz" | tar --wildcards -C /usr/local/bin/ --strip-components=1 -xJf - */shellcheck \
  && curl -sL "https://github.com/openfaas/faas-cli/releases/download/${FAASCLI_VERSION}/faas-cli${SUFFIX}" -o "/usr/local/bin/faas-cli" \
  && curl -sL "https://github.com/fission/fission/releases/download/${FISSION_VERSION}/fission-${FISSION_VERSION}-linux-${ARCHITECTURE}" -o "/usr/local/bin/fission" \
+ && curl -sL "https://github.com/argoproj/argo-workflows/releases/download/${ARGO_VERSION}/argo-linux-${ARCHITECTURE}.gz" | gzip -cd > /usr/local/bin/argo \
  && curl -sL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCHITECTURE}" -o "/usr/local/bin/yq" \
  && curl -sL "https://github.com/go-task/task/releases/download/${TASK_VERSION}/task_linux_${ARCHITECTURE}.tar.gz"| tar -C /usr/local/bin/ -xzf - task \
  && curl -sL "https://github.com/tilt-dev/tilt/releases/download/v${TILT_VERSION}/tilt.${TILT_VERSION}.linux.${ARCH}.tar.gz"| tar -C /usr/local/bin/ -xzf - tilt \
