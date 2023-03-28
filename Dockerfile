@@ -22,6 +22,7 @@ ARG FISSION_VERSION=v1.18.0
 ARG ARGO_VERSION=v3.4.5
 ARG TILT_VERSION=0.30.13
 ARG SHELLCHECK_VERSION=v0.9.0
+ARG RESTIC_VERSION=0.15.1
 USER root
 COPY profile/*.sh /etc/profile.d/
 COPY entrypoint.sh /usr/local/bin/
@@ -43,6 +44,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.${SA}.tar.xz" | tar --wildcards -C /usr/local/bin/ --strip-components=1 -xJf - */shellcheck \
  && curl -sL "https://github.com/openfaas/faas-cli/releases/download/${FAASCLI_VERSION}/faas-cli${SUFFIX}" -o "/usr/local/bin/faas-cli" \
  && curl -sL "https://github.com/fission/fission/releases/download/${FISSION_VERSION}/fission-${FISSION_VERSION}-linux-${ARCHITECTURE}" -o "/usr/local/bin/fission" \
+ && curl -sL "https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${ARCHITECTURE}.bz2" | bzip2 -cd >/usr/local/bin/restic \
  && curl -sL "https://github.com/argoproj/argo-workflows/releases/download/${ARGO_VERSION}/argo-linux-${ARCHITECTURE}.gz" | gzip -cd > /usr/local/bin/argo \
  && curl -sL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCHITECTURE}" -o "/usr/local/bin/yq" \
  && curl -sL "https://github.com/go-task/task/releases/download/${TASK_VERSION}/task_linux_${ARCHITECTURE}.tar.gz"| tar -C /usr/local/bin/ -xzf - task \
