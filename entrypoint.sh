@@ -21,7 +21,7 @@ fi
 # Allow users to have scripts run on container startup to prepare workspace.
 # https://github.com/coder/code-server/issues/5177
 if [ -d "${ENTRYPOINTD}" ]; then
-  find "${ENTRYPOINTD}" -type f -executable -print -exec {} \;
+  find "${ENTRYPOINTD}" -type f -executable -print -exec {} \; || true
 fi
 
 exec dumb-init /usr/local/bin/code-server --host 0.0.0.0 "$@"
