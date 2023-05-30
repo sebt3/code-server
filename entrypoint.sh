@@ -24,4 +24,4 @@ if [ -d "${ENTRYPOINTD}" ]; then
   find "${ENTRYPOINTD}" -type f -executable -print -exec {} \; || true
 fi
 
-exec dumb-init /usr/local/bin/code-server --host 0.0.0.0 "$@"
+exec dumb-init /usr/local/bin/code-server --disable-telemetry --host 0.0.0.0 "$@"
