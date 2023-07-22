@@ -1,0 +1,212 @@
+#!/usr/bin/env sh
+set -e
+export DOCKER_CONFIG=${KUBECTL_BUILD_DOCKER_CONFIG:-${DOCKER_CONFIG:-$HOME/.docker/config.json}}
+export KUBECONFIG="${KUBECTL_BUILD_KUBECONFIG:-$KUBECONFIG}"
+kubectl=kubectl
+version=1.0.0
+image="${KUBECTL_BUILD_IMAGE:-ghcr.io/kvaps/kaniko-executor:v1.7.0}"
+name="${KUBECTL_BUILD_NAME_OVERRIDE:-kaniko-$(env LC_ALL=C tr -dc a-z0-9 </dev/urandom | head -c 6)}"
+context=""
+debug="false"
+tty="false"
+usetar="false"
+generator=""
+digestfile=""
+imagenamewithdigestfile=""
+nodefaultctx=0
+nodefaultns=0
+registrysecret=""
+
+def="{}"
+args="[ "
+while [ $# -gt 0 ]; do
+  key="$1"
+
+  case $key in
+  --registry-secret)
+    registrysecret="$2"
+    shift
+    shift
+    ;;
+  -v | --version)
+    echo "kubectl-kaniko $version"
+    exit 0
+    ;;
+  -c | --context)
+    context="$2"
+    shift
+    shift
+    ;;
+  --context=*)
+    context="${key##*=}"
+    shift
+    ;;
+  --debug)
+    debug="true"
+    shift
+    ;;
+  --debug=*)
+    debug="${key##*=}"
+    shift
+    ;;
+  --kubecontext)
+    nodefaultctx=1
+    kubectl="$kubectl --context $2"
+    shift
+    shift
+    ;;
+  --kubecontext=*)
+    nodefaultctx=1
+    kubectl="$kubectl --context=${key##*=}"
+    shift
+    ;;
+  --kubeconfig)
+    kubectl="$kubectl --kubeconfig $2"
+    shift
+    shift
+    ;;
+  --kubeconfig=*)
+    kubectl="$kubectl --kubeconfig=${key##*=}"
+    shift
+    ;;
+  -n | --namespace)
+    nodefaultns=1
+    kubectl="$kubectl --namespace $2"
+    shift
+    shift
+    ;;
+  --namespace=*)
+    nodefaultns=1
+    kubectl="$kubectl --namespace=${key##*=}"
+    shift
+    ;;
+  *)
+    args="$args\"$1\", "
+    shift
+    ;;
+  esac
+done
+
+# Set the default context and namespace to avoid situations where the user switch them during the build process
+[ "$nodefaultctx" = 1 ] || kubectl="$kubectl --context=${KUBECTL_BUILD_CONTEXT:-$(kubectl config current-context)}"
+[ "$nodefaultns" = 1 ] || kubectl="$kubectl --namespace=${KUBECTL_BUILD_NAMESPACE:-$(kubectl config view --minify --output 'jsonpath={.contexts..namespace}')}"
+
+if [ -d "$context" ] || [ "$context" = "tar://stdin" ]; then
+  args="$args\"--context=tar://stdin\""
+  usetar=true
+  tty=false
+else
+  args="$args\"--context=$context\""
+  usetar=false
+  if [ $debug = true ]; then
+    tty=true
+  fi
+fi
+
+if [ "$debug" = true ]; then
+  args="$args, \"--debug\" ]"
+else
+  args="$args ]"
+fi
+
+volumes="[]"
+volumemounts="[]"
+if [ ! -z "$registrysecret" ];then
+  #volumes="[{\"name\": \"kaniko-secret\", \"secret\":{\"secretName\":\"$registrysecret\"}}]"
+  volumes="$(
+  cat <<EOT
+[{
+  "name": "kaniko-secret",
+  "secret": {
+    "secretName": "$registrysecret",
+    "items": [{
+      "key": ".dockerconfigjson",
+      "path": "config.json"
+    }]
+  }
+}]
+EOT
+)"
+  volumemounts="[{\"name\":\"kaniko-secret\", \"mountPath\": \"/kaniko/.docker\"}]"
+fi
+
+overrides="$(
+  cat <<EOT
+{
+  "metadata": ${KUBECTL_BUILD_METADATA_OVERRIDES:-$def},
+  "spec": {
+    "containers": [
+      {
+        "image": "$image",
+        "name": "kaniko",
+        "tty": $tty,
+        "stdin": true,
+        "stdinOnce": true,
+        "securityContext": {
+          "capabilities": {
+            "add": ["all"]
+          }
+        },
+        "terminationMessagePath": "/dev/termination-log",
+        "terminationMessagePolicy": "File",
+        "volumeMounts": $volumemounts,
+        "args": $args
+      }
+    ],
+    "securityContext": {
+      "seccompProfile": {
+        "type": "Unconfined"
+      }
+    },
+    "automountServiceAccountToken": false,
+    "volumes": $volumes,
+    "enableServiceLinks": false
+  }
+}
+EOT
+)"
+tarf() {
+  # Support bsdtar as well
+  m=$(tar --version | awk '{print $1; exit}')
+  if [ "$m" != "bsdtar" ]; then
+    #if [ -f "$DOCKER_CONFIG" ]; then
+    #  tar -P --transform "s|^${DOCKER_CONFIG}|../.docker/config.json|" --record-size=100K --checkpoint=1 --checkpoint-action='ttyout=Sending build context to Kaniko %{r}T\r' --exclude-ignore=.dockerignore "$@" "$DOCKER_CONFIG"
+    #else
+      tar -P --record-size=100K --checkpoint=1 --checkpoint-action='ttyout=Sending build context to Kaniko %{r}T\r' --exclude-ignore=.dockerignore "$@"
+    #fi
+  else
+    #if [ -f "$DOCKER_CONFIG" ]; then
+    #  tar -P -s "|^${DOCKER_CONFIG}|../.docker/config.json|" "$@" "$DOCKER_CONFIG"
+    #else
+      tar -P "$@"
+    #fi
+  fi
+}
+
+if [ "$KUBECTL_BUILD_KEEP_POD" != "true" ]; then
+  trap "ec=\$?; stty echo || true; $kubectl delete pod "$name" --wait=false 2>/dev/null || true; exit \$ec" EXIT INT TERM
+fi
+
+echo "spawning \"$name\""
+if [ "$usetar" = "true" ]; then
+  pidfile=$(mktemp -u)
+  (
+    tarf -C "$context" -czf - .
+    if [ "$debug" = true ]; then
+      sh -c 'echo $PPID' > "$pidfile"
+      trap "stty '$(stty -g)'" EXIT
+      stty -icanon -ctlecho -iexten -isig -echo
+      cat 2>/dev/null
+    fi
+  ) | (
+    $kubectl run --image "$image" --restart=Never --overrides="$overrides" -i "$name" --leave-stdin-open=true $generator
+    if [ "$debug" = true ]; then
+      kill $(cat "$pidfile") 2>/dev/null
+    fi
+    $kubectl get pod "$name" -w -o 'go-template={{with .status.containerStatuses}}{{range .}}{{with .state.terminated}}{{index . "exitCode"}}{{"\n"}}{{.exitCode.err}}{{end}}{{end}}{{end}}' 2>/dev/null \
+      | { read ec; exit $ec; }
+  )
+else
+  $kubectl run --image "$image" --restart=Never --overrides="$overrides" -i "$name" $generator
+fi
+stty echo

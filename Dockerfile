@@ -1,31 +1,31 @@
 # vim:set ft=dockerfile:
 FROM docker.io/golang:1.19 as gobuilder
 RUN GO111MODULE=on go install golang.stackrox.io/kube-linter/cmd/kube-linter@latest
-FROM docker.io/node:16-bullseye-slim as target
-ARG CS_VERSION=4.13.0
-ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0"
+FROM docker.io/node:16-bookworm-slim as target
+ARG CS_VERSION=4.14.1
+ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
 ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint netaddr"
 ARG NODE_PACKAGES="serverless parcel code-server@${CS_VERSION}"
-ARG KUBECTL_VERSION=v1.25.7
+ARG KUBECTL_VERSION=v1.27.3
 ARG BK_VERSION=v0.1.6
 ARG IMG_VERSION=v0.5.11
-ARG HELM_VERSION=v3.10.3
+ARG HELM_VERSION=v3.12.2
 ARG HADOLINT_VERSION=v2.12.0
-ARG ANSIBLE_VERSION=7.1.0
-ARG FAASCLI_VERSION=0.15.2
-ARG VIRTCTL_VERSION=v0.58.0
-ARG TF_VERSION=1.3.6
-ARG YQ_VERSION=v4.30.5
-ARG TASK_VERSION=v3.18.0
-ARG FISSION_VERSION=v1.18.0
-ARG ARGO_VERSION=v3.4.5
-ARG TILT_VERSION=0.30.13
+ARG ANSIBLE_VERSION=8.2.0
+ARG FAASCLI_VERSION=0.16.2
+ARG VIRTCTL_VERSION=v1.0.0
+ARG TF_VERSION=1.5.3
+ARG YQ_VERSION=v4.34.2
+ARG TASK_VERSION=v3.27.1
+ARG FISSION_VERSION=v1.19.0
+ARG ARGO_VERSION=v3.4.9
+ARG TILT_VERSION=0.33.2
 ARG SHELLCHECK_VERSION=v0.9.0
-ARG RESTIC_VERSION=0.15.1
+ARG RESTIC_VERSION=0.15.2
 USER root
 COPY profile/*.sh /etc/profile.d/
-COPY entrypoint.sh /usr/local/bin/
+COPY entrypoint.sh kubectl-kaniko /usr/local/bin/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3003,DL3008,DL3013,DL3015,DL3016,SC2035
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
@@ -53,8 +53,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_${ARCHITECTURE}.zip" -o /tmp/tf.zip \
  && unzip /tmp/tf.zip terraform -d /usr/local/bin \
  && rm /tmp/tf.zip \
- && pip install --no-cache-dir -U pip \
- && pip install --no-cache-dir ansible==${ANSIBLE_VERSION} ${PYTHON_PACKAGES} \
+ && pip install --break-system-packages --no-cache-dir -U pip \
+ && pip install --break-system-packages --no-cache-dir ansible==${ANSIBLE_VERSION} ${PYTHON_PACKAGES} \
  && ansible-galaxy collection install ${ANSIBLE_COLLECTIONS} \
  && chmod 0755 /usr/local/bin/* \
  && chown root:root /usr/local/bin/fixuid \
@@ -84,4 +84,5 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 COPY --from=gobuilder /go/bin/kube-linter /usr/local/bin
 USER coder:coder
 WORKDIR /home/coder
+VOLUME /var/lib/shellinabox
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
