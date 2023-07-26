@@ -16,6 +16,9 @@ if [ "${DOCKER_USER-}" ]; then
 
     sudo sed -i "/coder/d" /etc/sudoers.d/nopasswd
   fi
+  if [ "${DOCKER_PASSWORD-}" ]; then
+    echo "$DOCKER_USER:$DOCKER_PASSWORD"|sudo chpasswd ||:
+  fi
 fi
 
 # Allow users to have scripts run on container startup to prepare workspace.
