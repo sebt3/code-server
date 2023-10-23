@@ -64,7 +64,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && printf "user: coder\ngroup: coder\n" > /etc/fixuid/config.yml \
  && echo "coder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/coder \
  && chmod 0600 /etc/sudoers.d/coder \
- && npm config set python python3 \
  && npm install --global ${NODE_PACKAGES} --unsafe-perm \
  && mkdir -p /home/coder/projects /usr/local/startup \
  && cd /usr/local/lib/node_modules/code-server/lib/vscode && npm install --legacy-peer-deps . \
