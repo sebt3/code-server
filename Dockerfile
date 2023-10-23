@@ -2,7 +2,7 @@
 FROM docker.io/golang:1.19 as gobuilder
 RUN GO111MODULE=on go install golang.stackrox.io/kube-linter/cmd/kube-linter@latest
 FROM docker.io/node:16-bullseye-slim as target
-ARG CS_VERSION=4.15.0
+# ARG CS_VERSION=4.18.0
 ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
 ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint netaddr"
@@ -10,19 +10,19 @@ ARG NODE_PACKAGES="serverless parcel code-server@${CS_VERSION}"
 ARG KUBECTL_VERSION=v1.27.3
 ARG BK_VERSION=v0.1.6
 ARG IMG_VERSION=v0.5.11
-ARG HELM_VERSION=v3.12.2
+ARG HELM_VERSION=v3.13.1
 ARG HADOLINT_VERSION=v2.12.0
-ARG ANSIBLE_VERSION=8.2.0
+ARG ANSIBLE_VERSION=8.5.0
 ARG FAASCLI_VERSION=0.16.2
 ARG VIRTCTL_VERSION=v1.0.0
 ARG TF_VERSION=1.5.3
-ARG YQ_VERSION=v4.34.2
+ARG YQ_VERSION=v4.35.2
 ARG TASK_VERSION=v3.27.1
 ARG FISSION_VERSION=v1.19.0
 ARG ARGO_VERSION=v3.4.9
 ARG TILT_VERSION=0.33.2
 ARG SHELLCHECK_VERSION=v0.9.0
-ARG RESTIC_VERSION=0.15.2
+ARG RESTIC_VERSION=0.16.0
 USER root
 COPY profile/*.sh /etc/profile.d/
 COPY entrypoint.sh kubectl-kaniko /usr/local/bin/
