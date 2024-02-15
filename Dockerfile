@@ -2,7 +2,7 @@
 FROM docker.io/golang:1.19 as gobuilder
 RUN GO111MODULE=on go install golang.stackrox.io/kube-linter/cmd/kube-linter@latest
 FROM docker.io/node:18-bullseye-slim as target
-# ARG CS_VERSION=4.18.0
+ARG CS_VERSION=4.21.1
 ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
 ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint netaddr"
