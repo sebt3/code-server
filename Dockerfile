@@ -1,6 +1,4 @@
 # vim:set ft=dockerfile:
-FROM docker.io/golang:1.19 as gobuilder
-RUN GO111MODULE=on go install golang.stackrox.io/kube-linter/cmd/kube-linter@latest
 FROM docker.io/node:18-bullseye-slim as target
 ARG CS_VERSION=4.93.1
 ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox socat"
@@ -9,7 +7,6 @@ ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint
 ARG NODE_PACKAGES="serverless parcel code-server@${CS_VERSION}"
 ARG KUBECTL_VERSION=v1.31.1
 ARG BK_VERSION=v0.16.0
-ARG IMG_VERSION=v0.5.11
 ARG HELM_VERSION=v3.16.0
 ARG HADOLINT_VERSION=v2.12.0
 ARG ANSIBLE_VERSION=10.5.0
@@ -17,8 +14,6 @@ ARG FAASCLI_VERSION=0.16.37
 ARG VIRTCTL_VERSION=v1.3.1
 ARG TF_VERSION=1.9.8
 ARG YQ_VERSION=v4.44.3
-ARG TASK_VERSION=v3.39.2
-ARG FISSION_VERSION=v1.20.5
 ARG ARGO_VERSION=v3.5.11
 ARG TILT_VERSION=0.33.20
 ARG SHELLCHECK_VERSION=v0.10.0
@@ -38,16 +33,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl" -o /usr/local/bin/kubectl \
  && echo "$(curl -sL "https://dl.k8s.io/${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl.sha256") /usr/local/bin/kubectl" | sha256sum --check \
  && curl -sL "https://github.com/vmware-tanzu/buildkit-cli-for-kubectl/releases/download/${BK_VERSION}/linux-${BK_VERSION}.tgz"| tar -C /usr/local/bin/ -xzf - \
- && curl -sL "https://github.com/genuinetools/img/releases/download/${IMG_VERSION}/img-linux-${ARCHITECTURE}" -o "/usr/local/bin/img" \
  && curl -sL "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCHITECTURE}.tar.gz" |tar --wildcards -C /usr/local/bin/ --strip-components=1 -xzf - */helm \
  && curl -sL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-${ARCH}" -o "/usr/local/bin/hadolint" \
  && curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.${SA}.tar.xz" | tar --wildcards -C /usr/local/bin/ --strip-components=1 -xJf - */shellcheck \
- && curl -sL "https://github.com/openfaas/faas-cli/releases/download/${FAASCLI_VERSION}/faas-cli${SUFFIX}" -o "/usr/local/bin/faas-cli" \
- && curl -sL "https://github.com/fission/fission/releases/download/${FISSION_VERSION}/fission-${FISSION_VERSION}-linux-${ARCHITECTURE}" -o "/usr/local/bin/fission" \
  && curl -sL "https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${ARCHITECTURE}.bz2" | bzip2 -cd >/usr/local/bin/restic \
  && curl -sL "https://github.com/argoproj/argo-workflows/releases/download/${ARGO_VERSION}/argo-linux-${ARCHITECTURE}.gz" | gzip -cd > /usr/local/bin/argo \
  && curl -sL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCHITECTURE}" -o "/usr/local/bin/yq" \
- && curl -sL "https://github.com/go-task/task/releases/download/${TASK_VERSION}/task_linux_${ARCHITECTURE}.tar.gz"| tar -C /usr/local/bin/ -xzf - task \
  && curl -sL "https://github.com/tilt-dev/tilt/releases/download/v${TILT_VERSION}/tilt.${TILT_VERSION}.linux.${ARCH}.tar.gz"| tar -C /usr/local/bin/ -xzf - tilt \
  && curl -sL "https://github.com/kubevirt/kubevirt/releases/download/${VIRTCTL_VERSION}/virtctl-${VIRTCTL_VERSION}-linux-amd64" -o "/usr/local/bin/kubectl-virt" \
  && curl -sL "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_${ARCHITECTURE}.zip" -o /tmp/tf.zip \
@@ -80,7 +71,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
  && echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen \
  && locale-gen
-COPY --from=gobuilder /go/bin/kube-linter /usr/local/bin
 USER coder:coder
 WORKDIR /home/coder
 VOLUME /var/lib/shellinabox
