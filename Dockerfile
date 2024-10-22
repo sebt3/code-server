@@ -1,15 +1,15 @@
 # vim:set ft=dockerfile:
-FROM docker.io/node:18-bullseye-slim as target
+FROM docker.io/node:20-bullseye-slim as target
 ARG CS_VERSION=4.93.1
 ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox socat"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
 ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint netaddr"
 ARG NODE_PACKAGES="serverless parcel code-server@${CS_VERSION}"
 ARG KUBECTL_VERSION=v1.31.1
-ARG BK_VERSION=v0.16.0
+ARG BK_VERSION=v0.1.6
 ARG HELM_VERSION=v3.16.0
 ARG HADOLINT_VERSION=v2.12.0
-ARG ANSIBLE_VERSION=10.5.0
+ARG ANSIBLE_VERSION=8.7.0
 ARG FAASCLI_VERSION=0.16.37
 ARG VIRTCTL_VERSION=v1.3.1
 ARG TF_VERSION=1.9.8
@@ -33,6 +33,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl" -o /usr/local/bin/kubectl \
  && echo "$(curl -sL "https://dl.k8s.io/${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl.sha256") /usr/local/bin/kubectl" | sha256sum --check \
  && curl -sL "https://github.com/vmware-tanzu/buildkit-cli-for-kubectl/releases/download/${BK_VERSION}/linux-${BK_VERSION}.tgz"| tar -C /usr/local/bin/ -xzf - \
+ && echo helm \
  && curl -sL "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCHITECTURE}.tar.gz" |tar --wildcards -C /usr/local/bin/ --strip-components=1 -xzf - */helm \
  && curl -sL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-${ARCH}" -o "/usr/local/bin/hadolint" \
  && curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.${SA}.tar.xz" | tar --wildcards -C /usr/local/bin/ --strip-components=1 -xJf - */shellcheck \
