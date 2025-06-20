@@ -1,10 +1,8 @@
 # vim:set ft=dockerfile:
-FROM docker.io/node:20-bullseye-slim as target
-ARG CS_VERSION=4.95.3
+FROM docker.io/node:20-bullseye-slim AS target
 ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox socat"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
 ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint netaddr"
-ARG NODE_PACKAGES="serverless parcel code-server@${CS_VERSION}"
 ARG KUBECTL_VERSION=v1.31.1
 ARG BK_VERSION=v0.1.6
 ARG HELM_VERSION=v3.16.0
@@ -55,10 +53,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && sed -i 's/node/coder/g' /etc/passwd /etc/group /etc/shadow \
  && printf "user: coder\ngroup: coder\n" > /etc/fixuid/config.yml \
  && echo "coder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/coder \
- && chmod 0600 /etc/sudoers.d/coder \
- && npm install --global ${NODE_PACKAGES} --unsafe-perm \
+ && chmod 0600 /etc/sudoers.d/coder
+WORKDIR /tmp/
+ARG CS_VERSION=4.100.3
+RUN npm install --unsafe-perm code-server@${CS_VERSION} \
+ && mv node_modules/code-server /usr/local/lib/node_modules \
+ && rm -rf node_modules \
+ && (cd /usr/local/lib/node_modules/code-server && npm_config_unsafe_perm=true npm_config_user_agent=npm ./postinstall.sh) \
+ && ln -s ../lib/node_modules/code-server/out/node/entry.js /usr/local/bin/code-server \
  && mkdir -p /home/coder/projects /usr/local/startup \
- && cd /usr/local/lib/node_modules/code-server/lib/vscode && npm install --legacy-peer-deps . \
  && chown -R coder:coder /home/coder \
  && /bin/echo -e 'unqualified-search-registries=["docker.io", "quai.io"]\n[[registry]]\nlocation = "registry:80"\ninsecure = true\n'>/etc/containers/registries.conf \
  && /bin/echo -e '[containers]\nnetns="host"\nuserns="host"\nipcns="host"\nutsns="host"\ncgroupns="host"\nclog_driver = "k8s-file"\ncgroups = "disabled"\n[engine]\ncgroup_manager = "cgroupfs"\nevents_logger="file"\n'>/etc/containers/containers.conf \
@@ -72,6 +75,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
  && echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen \
  && locale-gen
+ENV ENTRYPOINTD=/usr/local/startup
 USER coder:coder
 WORKDIR /home/coder
 VOLUME /var/lib/shellinabox

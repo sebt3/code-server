@@ -30,5 +30,5 @@ fi
 if [ "${IS_CONSOLE-}" ] && [ "$IS_CONSOLE" = "shellinabox" ];then
   exec sudo /usr/bin/shellinaboxd -c /var/lib/shellinabox -p 8080 -t --no-beep -u shellinabox -g shellinabox "$@"
 else
-  exec dumb-init /usr/local/bin/code-server --disable-telemetry --host 0.0.0.0 "$@"
+  exec dumb-init /usr/local/bin/code-server --disable-telemetry "$@"
 fi
