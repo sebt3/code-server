@@ -1,18 +1,17 @@
 # vim:set ft=dockerfile:
-FROM docker.io/node:22-bullseye-slim AS target
+FROM docker.io/node:22-trixie-slim AS target
 ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox socat"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
 ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint netaddr"
-ARG KUBECTL_VERSION=v1.31.1
+ARG KUBECTL_VERSION=v1.34.1
 ARG BK_VERSION=v0.1.6
-ARG HELM_VERSION=v3.16.0
-ARG HADOLINT_VERSION=v2.12.0
-ARG ANSIBLE_VERSION=8.7.0
-ARG FAASCLI_VERSION=0.16.37
-ARG VIRTCTL_VERSION=v1.3.1
+ARG HELM_VERSION=v4.0.5
+ARG HADOLINT_VERSION=v2.14.0
+ARG ANSIBLE_VERSION=13.2.0
+ARG VIRTCTL_VERSION=v1.7.0
 ARG TF_VERSION=1.9.8
 ARG YQ_VERSION=v4.44.3
-ARG ARGO_VERSION=v3.5.11
+ARG FLUX_VERSION=2.7.5
 ARG TILT_VERSION=0.33.20
 ARG SHELLCHECK_VERSION=v0.10.0
 ARG RESTIC_VERSION=0.17.1
@@ -36,7 +35,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-${ARCH}" -o "/usr/local/bin/hadolint" \
  && curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.${SA}.tar.xz" | tar --wildcards -C /usr/local/bin/ --strip-components=1 -xJf - */shellcheck \
  && curl -sL "https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${ARCHITECTURE}.bz2" | bzip2 -cd >/usr/local/bin/restic \
- && curl -sL "https://github.com/argoproj/argo-workflows/releases/download/${ARGO_VERSION}/argo-linux-${ARCHITECTURE}.gz" | gzip -cd > /usr/local/bin/argo \
+ && curl -sL "https://github.com/fluxcd/flux2/releases/download/v${FLUX_VERSION}/flux_${FLUX_VERSION}_linux_${ARCHITECTURE}.tar.gz"| tar --wildcards -C /usr/local/bin/  -xJf \
  && curl -sL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCHITECTURE}" -o "/usr/local/bin/yq" \
  && curl -sL "https://github.com/tilt-dev/tilt/releases/download/v${TILT_VERSION}/tilt.${TILT_VERSION}.linux.${ARCH}.tar.gz"| tar -C /usr/local/bin/ -xzf - tilt \
  && curl -sL "https://github.com/kubevirt/kubevirt/releases/download/${VIRTCTL_VERSION}/virtctl-${VIRTCTL_VERSION}-linux-amd64" -o "/usr/local/bin/kubectl-virt" \
@@ -55,7 +54,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && echo "coder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/coder \
  && chmod 0600 /etc/sudoers.d/coder
 WORKDIR /tmp/
-ARG CS_VERSION=4.101.2
+ARG CS_VERSION=4.108.1
 RUN npm install --unsafe-perm code-server@${CS_VERSION} \
  && mv node_modules/code-server /usr/local/lib/node_modules \
  && rm -rf node_modules \
