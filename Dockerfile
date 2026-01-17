@@ -35,7 +35,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-${ARCH}" -o "/usr/local/bin/hadolint" \
  && curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.${SA}.tar.xz" | tar --wildcards -C /usr/local/bin/ --strip-components=1 -xJf - */shellcheck \
  && curl -sL "https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${ARCHITECTURE}.bz2" | bzip2 -cd >/usr/local/bin/restic \
- && curl -sL "https://github.com/fluxcd/flux2/releases/download/v${FLUX_VERSION}/flux_${FLUX_VERSION}_linux_${ARCHITECTURE}.tar.gz"| tar --wildcards -C /usr/local/bin/  -xJf - \
+ && curl -sL "https://github.com/fluxcd/flux2/releases/download/v${FLUX_VERSION}/flux_${FLUX_VERSION}_linux_${ARCHITECTURE}.tar.gz"| tar --wildcards -C /usr/local/bin/  -xzf - \
  && curl -sL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCHITECTURE}" -o "/usr/local/bin/yq" \
  && curl -sL "https://github.com/tilt-dev/tilt/releases/download/v${TILT_VERSION}/tilt.${TILT_VERSION}.linux.${ARCH}.tar.gz"| tar -C /usr/local/bin/ -xzf - tilt \
  && curl -sL "https://github.com/kubevirt/kubevirt/releases/download/${VIRTCTL_VERSION}/virtctl-${VIRTCTL_VERSION}-linux-amd64" -o "/usr/local/bin/kubectl-virt" \
