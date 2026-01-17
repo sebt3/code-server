@@ -42,7 +42,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_${ARCHITECTURE}.zip" -o /tmp/tf.zip \
  && unzip /tmp/tf.zip terraform -d /usr/local/bin \
  && rm /tmp/tf.zip \
- && pip install --break-system-packages --no-cache-dir -U pip \
  && pip install --break-system-packages --no-cache-dir ansible==${ANSIBLE_VERSION} ${PYTHON_PACKAGES} \
  && ansible-galaxy collection install ${ANSIBLE_COLLECTIONS} \
  && chmod 0755 /usr/local/bin/* \
