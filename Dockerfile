@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM docker.io/node:22-trixie-slim AS target
+FROM docker.io/node:22.22-trixie-slim AS target
 ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox socat libkrb5-dev"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
 ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint netaddr"
@@ -53,7 +53,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && echo "coder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/coder \
  && chmod 0600 /etc/sudoers.d/coder
 WORKDIR /tmp/
-ARG CS_VERSION=4.109.5
+ARG CS_VERSION=4.112.0
 RUN npm install --unsafe-perm code-server@${CS_VERSION} \
  && mv node_modules/code-server /usr/local/lib/node_modules \
  && rm -rf node_modules \
