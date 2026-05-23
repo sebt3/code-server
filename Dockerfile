@@ -53,7 +53,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && echo "coder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/coder \
  && chmod 0600 /etc/sudoers.d/coder
 WORKDIR /tmp/
-ARG CS_VERSION=4.121.0
+ARG CS_VERSION=4.117.0
 ARG OPENCODE_VERSION=0.0.55
 RUN npm install --unsafe-perm code-server@${CS_VERSION} \
  && mv node_modules/code-server /usr/local/lib/node_modules \
