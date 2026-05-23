@@ -3,18 +3,18 @@ FROM docker.io/node:22.22-trixie-slim AS target
 ARG DEB_PACKAGES="vim git jq man locales curl netcat-openbsd traceroute bind9-dnsutils file iputils-ping openssh-client make bash-completion dialog libcap2-bin podman python3-pip python3-venv python3-ldap unzip ldap-utils build-essential pkg-config python3 dumb-init sudo libffi-dev libssl-dev libsecret-1-0 shellinabox socat libkrb5-dev"
 ARG ANSIBLE_COLLECTIONS="kubernetes.core community.crypto community.general"
 ARG PYTHON_PACKAGES="jmespath jsonpatch kubernetes>=12.0.0 ansible-lint yamllint molecule pylint netaddr"
-ARG KUBECTL_VERSION=v1.34.1
+ARG KUBECTL_VERSION=v1.36.1
 ARG BK_VERSION=v0.1.6
-ARG HELM_VERSION=v4.0.5
+ARG HELM_VERSION=v4.2.0
 ARG HADOLINT_VERSION=v2.14.0
-ARG ANSIBLE_VERSION=13.2.0
-ARG VIRTCTL_VERSION=v1.7.0
-ARG TF_VERSION=1.9.8
-ARG YQ_VERSION=v4.44.3
-ARG FLUX_VERSION=2.7.5
-ARG TILT_VERSION=0.33.20
-ARG SHELLCHECK_VERSION=v0.10.0
-ARG RESTIC_VERSION=0.17.1
+ARG ANSIBLE_VERSION=13.7.0
+ARG VIRTCTL_VERSION=v1.8.2
+ARG TF_VERSION=1.15.4
+ARG YQ_VERSION=v4.53.2
+ARG FLUX_VERSION=2.8.8
+ARG TILT_VERSION=0.37.3
+ARG SHELLCHECK_VERSION=v0.11.0
+ARG RESTIC_VERSION=0.18.1
 USER root
 COPY profile/*.sh /etc/profile.d/
 COPY entrypoint.sh kubectl-kaniko /usr/local/bin/
@@ -53,12 +53,14 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && echo "coder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/coder \
  && chmod 0600 /etc/sudoers.d/coder
 WORKDIR /tmp/
-ARG CS_VERSION=4.112.0
+ARG CS_VERSION=4.121.0
+ARG OPENCODE_VERSION=0.0.55
 RUN npm install --unsafe-perm code-server@${CS_VERSION} \
  && mv node_modules/code-server /usr/local/lib/node_modules \
  && rm -rf node_modules \
  && (cd /usr/local/lib/node_modules/code-server && npm_config_unsafe_perm=true npm_config_user_agent=npm ./postinstall.sh) \
  && ln -s ../lib/node_modules/code-server/out/node/entry.js /usr/local/bin/code-server \
+ && npm install -g opencode-ai@${OPENCODE_VERSION} \
  && mkdir -p /home/coder/projects /usr/local/startup \
  && chown -R coder:coder /home/coder \
  && /bin/echo -e 'unqualified-search-registries=["docker.io", "quai.io"]\n[[registry]]\nlocation = "registry:80"\ninsecure = true\n'>/etc/containers/registries.conf \
