@@ -58,7 +58,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && chmod 0600 /etc/sudoers.d/coder
 WORKDIR /tmp/
 ARG CS_VERSION=4.117.0
-ARG OPENCODE_VERSION=0.0.55
+ARG OPENCODE_VERSION=1.15.10
 RUN npm install --unsafe-perm code-server@${CS_VERSION} \
  && mv node_modules/code-server /usr/local/lib/node_modules \
  && rm -rf node_modules \
