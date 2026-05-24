@@ -63,6 +63,7 @@ RUN npm install --unsafe-perm code-server@${CS_VERSION} \
  && mv node_modules/code-server /usr/local/lib/node_modules \
  && rm -rf node_modules \
  && (cd /usr/local/lib/node_modules/code-server && npm_config_unsafe_perm=true npm_config_user_agent=npm ./postinstall.sh) \
+ && (cd /usr/local/lib/node_modules/code-server/lib/vscode && npm install --no-save @vscode/fs-copyfile@2.0.0) \
  && ln -s ../lib/node_modules/code-server/out/node/entry.js /usr/local/bin/code-server \
  && npm install -g opencode-ai@${OPENCODE_VERSION} \
  && mkdir -p /home/coder/projects /usr/local/startup \
