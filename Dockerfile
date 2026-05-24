@@ -23,8 +23,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get -y upgrade \
  && DEBIAN_FRONTEND=noninteractive apt-get -y install ${DEB_PACKAGES} \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/* \
+ && curl -fsSL https://pkg.goauthentik.io/keys/gpg-key.asc | gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg \
+ && echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] https://pkg.goauthentik.io stable main" | tee /etc/apt/sources.list.d/authentik.list \
+ && DEBIAN_FRONTEND=noninteractive apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get -y install authentik-cli \
  && SUFFIX="";case "$(uname -m)" in arm) SUFFIX="-armhf";ARCHITECTURE=arm;ARCH=arm;SA=armv6hf;; armv8*|aarch64*) SUFFIX="-arm64";ARCHITECTURE=arm64;ARCH=arm64;SA=aarch64;; x86_64|i686|*) ARCHITECTURE=amd64;ARCH=x86_64;SA="$ARCH";; esac \
  && curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - \
  && curl -sL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl" -o /usr/local/bin/kubectl \
@@ -42,6 +44,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
  && curl -sL "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_${ARCHITECTURE}.zip" -o /tmp/tf.zip \
  && unzip /tmp/tf.zip terraform -d /usr/local/bin \
  && rm /tmp/tf.zip \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* \
  && pip install --break-system-packages --no-cache-dir ansible==${ANSIBLE_VERSION} ${PYTHON_PACKAGES} \
  && ansible-galaxy collection install ${ANSIBLE_COLLECTIONS} \
  && chmod 0755 /usr/local/bin/* \
